@@ -16,13 +16,14 @@ Repositorio del curso MDS7202 (Otoño 2026), Facultad de Ciencias Físicas y Mat
 │   ├── workflows/
 │   │   └── lint.yml
 │   └── pull_request_template.md
-├── labs/
+├── labs\lab_1
 │   ├── lab_1/
 │   └── ...
 ├── pyproject.toml
-├── .github/
+├── .gitignore
 ├── .pre-commit-config.yaml
-└── README.md
+├── README.md
+└── uv.lock
 
 ## Configuración del entorno
 
