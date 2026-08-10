@@ -11,6 +11,7 @@ Repositorio del curso MDS7202 (Otoño 2026), Facultad de Ciencias Físicas y Mat
 
 ## Estructura del repositorio
 
+```
 .
 ├── .github/
 │   ├── workflows/
@@ -24,6 +25,7 @@ Repositorio del curso MDS7202 (Otoño 2026), Facultad de Ciencias Físicas y Mat
 ├── .pre-commit-config.yaml
 ├── README.md
 └── uv.lock
+```
 
 ## Configuración del entorno
 
