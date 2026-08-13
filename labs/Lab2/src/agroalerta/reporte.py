@@ -1,4 +1,4 @@
-from agroalerta.sensores import Sensor
+from .sensores import Sensor
 
 
 def contar_riesgos(sensores: list[Sensor], lecturas: dict) -> dict[str, int]:

@@ -13,9 +13,9 @@ class Sensor(ABC):
     @abstractmethod
     def es_riesgo(self, valor: float) -> bool: ...
 
-    @property  # noqa: B027
-    def range_seguro(self):
-        pass
+    @property
+    @abstractmethod
+    def range_seguro(self): ...
 
 
 class SensorTemperatura(Sensor):
@@ -25,7 +25,11 @@ class SensorTemperatura(Sensor):
         self._maximo = maximo
 
     def es_riesgo(self, valor: float) -> bool:
-        return not (valor < self._minimo or valor > self._maximo)
+        return valor < self._minimo or valor > self._maximo
+
+    @property
+    def range_seguro(self):
+        raise NotImplementedError
 
 
 class SensorViento(Sensor):
@@ -34,7 +38,11 @@ class SensorViento(Sensor):
         self._maximo = maximo
 
     def es_riesgo(self, valor: float) -> bool:
-        return not (valor > self._maximo)
+        return valor > self._maximo
+
+    @property
+    def range_seguro(self):
+        raise NotImplementedError
 
 
 class SensorHumedad(Sensor):
@@ -43,4 +51,8 @@ class SensorHumedad(Sensor):
         self._maximo = maximo
 
     def es_riesgo(self, valor: float) -> bool:
-        return not (valor > self._maximo)
+        return valor > self._maximo
+
+    @property
+    def range_seguro(self):
+        raise NotImplementedError
