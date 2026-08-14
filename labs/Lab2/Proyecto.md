@@ -161,8 +161,7 @@ Mejore las clases anteriores:
 Cree `src/agroalerta/reporte.py` con:
 
 ```python
-def contar_riesgos(sensores, lecturas):
-    ...
+def contar_riesgos(sensores, lecturas): ...
 ```
 
 La función recibe:

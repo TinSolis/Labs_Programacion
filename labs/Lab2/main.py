@@ -1,12 +1,15 @@
-import sys
+# import sys
+# sys.path.insert(0, str(Path(__file__).parent / "src"))
+import argparse
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
-import argparse
-
-from agroalerta.datos import cargar_lecturas
-from agroalerta.reporte import contar_riesgos
-from agroalerta.sensores import SensorHumedad, SensorTemperatura, SensorViento
+from src.agroalerta.datos import cargar_lecturas
+from src.agroalerta.reporte import contar_riesgos
+from src.agroalerta.sensores import (
+    SensorHumedad,
+    SensorTemperatura,
+    SensorViento,
+)
 
 
 def main():
@@ -20,7 +23,7 @@ def main():
         SensorHumedad(85),
     ]
 
-    lecturas = cargar_lecturas(Path("data/lecturas.csv"), args.fecha)
+    lecturas = cargar_lecturas(Path(r"data\lecturas.csv"), args.fecha)
     conteo = contar_riesgos(sensores, lecturas)
 
     print(f"Estación Parcela Norte — {args.fecha}")

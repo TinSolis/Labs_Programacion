@@ -9,4 +9,5 @@ def contar_riesgos(sensores: list[Sensor], lecturas: dict) -> dict[str, int]:
             if sensor.es_riesgo(valor):
                 cantidad += 1
         conteo[sensor.nombre] = cantidad
+    print(conteo)
     return conteo
