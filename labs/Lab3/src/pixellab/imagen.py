@@ -14,9 +14,19 @@ class Imagen:
 
     def __init__(self, img: np.ndarray) -> None:
         # Su código aquí
-        raise NotImplementedError(
-            "Completen __init__ antes de ejecutar el programa."
-        )
+        if not isinstance(img, np.ndarray):
+            raise TypeError(
+                "Debes entregar un arreglo de numpy como argumento del constructor de Imagen"
+            )
+        elif img.ndim != 3:
+            raise ValueError(
+                "Debes entregar un arreglo de numpy al menos 3 dimensiones"
+            )
+        elif img.shape[-1] != 3:
+            raise ValueError(
+                "Debes entregar un arreglo de numpy al menos 3 canales"
+            )
+        self.imagen = img
 
     def __add__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
         # Su código aquí
