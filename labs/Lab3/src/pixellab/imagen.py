@@ -14,9 +14,10 @@ class Imagen:
 
     def __init__(self, img: np.ndarray) -> None:
         # Su código aquí
-        raise NotImplementedError(
-            "Completen __init__ antes de ejecutar el programa."
-        )
+        self.imagen = img
+        # raise NotImplementedError(
+        #     "Completen __init__ antes de ejecutar el programa."
+        # )
 
     def __add__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
         # Su código aquí
