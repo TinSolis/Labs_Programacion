@@ -20,46 +20,51 @@ class Imagen:
             )
         elif img.ndim != 3:
             raise ValueError(
-                "Debes entregar un arreglo de numpy al menos 3 dimensiones"
+                "Debes entregar un arreglo de numpy con 3 dimensiones"
             )
         elif img.shape[-1] != 3:
-            raise ValueError(
-                "Debes entregar un arreglo de numpy al menos 3 canales"
-            )
+            raise ValueError("Debes entregar un arreglo de numpy con 3 canales")
         self.imagen = img
 
+    def _obtener_operando(
+        self, other: int | float | np.ndarray | Imagen
+    ) -> int | float | np.ndarray:
+        # checkear si es que es imagen
+        if isinstance(other, Imagen):
+            # checkear si calza la imagen
+            if other.imagen.shape != self.imagen.shape:
+                # si no error
+                raise ValueError("Las dimensiones de las imágenes no calzan")
+            # si esta bien se de vuelve
+            return other.imagen
+        # si no es imagen se de vuelve
+        return other
+
+    # funcionar para saturar los limites
+    def _saturar(self, resultado: np.ndarray) -> Imagen:
+        resultado = resultado.astype(int)
+        resultado[resultado > 255] = 255
+        resultado[resultado < 0] = 0
+        return Imagen(np.copy(resultado))
+
     def __add__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __add__ antes de ejecutar el programa."
-        )
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen + operando)
 
     def __radd__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __radd__ antes de ejecutar el programa."
-        )
+        return self.__add__(other)
 
     def __sub__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __sub__ antes de ejecutar el programa."
-        )
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen - operando)
 
     def __rsub__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __rsub__ antes de ejecutar el programa."
-        )
+        operando = self._obtener_operando(other)
+        return self._saturar(operando - self.imagen)
 
     def __mul__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __mul__ antes de ejecutar el programa."
-        )
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen * operando)
 
     def __rmul__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen __rmul__ antes de ejecutar el programa."
-        )
+        return self.__mul__(other)

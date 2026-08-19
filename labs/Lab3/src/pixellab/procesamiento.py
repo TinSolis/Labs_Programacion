@@ -12,10 +12,7 @@ class LibImagen:
     """Filtros y transformaciones que reciben y retornan ``Imagen``."""
 
     def to_negative(self, img_in: Imagen) -> Imagen:
-        # Su código aquí
-        raise NotImplementedError(
-            "Completen to_negative antes de ejecutar el programa."
-        )
+        return img_in.__sub__(255)
 
     def to_gray(self, img_in: Imagen) -> Imagen:
         # Su código aquí
