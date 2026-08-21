@@ -26,68 +26,46 @@ class Imagen:
             raise ValueError("Debes entregar un arreglo de numpy con 3 canales")
         self.imagen = img
 
+    def _obtener_operando(
+        self, other: int | float | np.ndarray | Imagen
+    ) -> int | float | np.ndarray:
+        # checkear si es que es imagen
+        if isinstance(other, Imagen):
+            # checkear si calza la imagen
+            if other.imagen.shape != self.imagen.shape:
+                # si no error
+                raise ValueError("Las dimensiones de las imágenes no calzan")
+            # si esta bien se de vuelve
+            return other.imagen
+        # si no es imagen se de vuelve
+        return other
+
+    # funcionar para saturar los limites
+    def _saturar(self, resultado: np.ndarray) -> Imagen:
+        resultado = resultado.astype(int)
+        resultado[resultado > 255] = 255
+        resultado[resultado < 0] = 0
+        return Imagen(np.copy(resultado))
+
     def __add__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        img = self.imagen.copy()
-        try:
-            other_value = obtener_operador(img, other)
-            return Imagen(saturar_check(img + other_value))
-        except ValueError as err:
-            raise ValueError("Las dimensiones no calzan") from err
+
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen + operando)
 
     def __radd__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
         return self.__add__(other)
 
     def __sub__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        img = self.imagen.copy()
-        try:
-            other_value = obtener_operador(img, other)
-            return Imagen(saturar_check(img - other_value))
-        except ValueError as err:
-            raise ValueError("Las dimensiones no calzan") from err
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen - operando)
 
     def __rsub__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        img = self.imagen.copy()
-        try:
-            other_value = obtener_operador(img, other)
-            return Imagen(saturar_check(other_value - img))
-        except ValueError as err:
-            raise ValueError("Las dimensiones no calzan") from err
+        operando = self._obtener_operando(other)
+        return self._saturar(operando - self.imagen)
 
     def __mul__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
-        img = self.imagen.copy()
-        try:
-            other_value = obtener_operador(img, other)
-            if isinstance(other_value, np.ndarray):
-                other_dim = other.ndim
-                if img.shape[other_dim:] != other.shape[:other_dim]:
-                    raise ValueError("no se coinciden las dimensiones.")
-            return Imagen(saturar_check(img * other))
-        except ValueError as err:
-            raise ValueError("Las dimensiones no calzan") from err
+        operando = self._obtener_operando(other)
+        return self._saturar(self.imagen * operando)
 
     def __rmul__(self, other: int | float | np.ndarray | Imagen) -> Imagen:
-        # Su código aquí
         return self.__mul__(other)
-
-
-def obtener_operador(
-    img: np.ndarray, other: int | float | np.ndarray | Imagen
-) -> int | float | np.ndarray:
-    img_size = img.shape
-    if isinstance(other, Imagen):
-        return obtener_operador(img, other.imagen)
-    elif isinstance(other, np.ndarray) and (img_size != other.shape):
-        raise ValueError("Debes entregar un arreglo de misma dimension")
-    return other
-
-
-def saturar_check(img: np.ndarray):
-    imagen = img.copy().astype(int)
-    imagen[imagen > 255] = 255
-    imagen[imagen < 0] = 0
-    return imagen
