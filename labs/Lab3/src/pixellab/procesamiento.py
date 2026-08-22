@@ -67,8 +67,21 @@ class LibImagen:
         return Imagen(last_step) + 128
 
     def conv_channel(self, img_in: Imagen, kernel: np.ndarray) -> Imagen:
-        """Por documentar (esto es parte del trabajo de la Etapa 6)."""
-        # El cuerpo de este método lo entrega el curso.
+        """
+        La función recibe una imagen y un kernel, aplicando una convolución 2D a cada canal de la imagen utilizando el
+        kernel proporcionado. Los parámetros mode="same" y boundary="symm" de convolve2d permiten que la imagen
+        resultante conserve el mismo alto y ancho que la imagen original. Para cada canal de color, convolve2d aplica
+        el kernel sobre la vecindad de cada píxel y calcula el valor correspondiente del píxel de salida, recorriendo
+        la imagen de izquierda a derecha y de arriba hacia abajo.
+        Una vez finalizada la convolución, los valores se saturan al rango [0, 255] para mantener valores válidos
+        para una imagen RGB.
+
+        Parámetros:
+            img_in: Imagen de entrada.
+            kernel: Kernel 2D utilizado para realizar la convolución.
+        Retorna:
+            Imagen resultante después de aplicar la convolución a todos los canales.
+        """
         img = img_in.imagen
         img_out = []
         for i in range(img.shape[-1]):
