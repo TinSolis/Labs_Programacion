@@ -10,9 +10,25 @@ ESQUEMA_TEMPERATURAS = pa.DataFrameSchema({})
 
 def comparar_esquema(temperaturas: pl.DataFrame) -> list[str]:
     """Devuelve diferencias entre el esquema real y el esperado."""
-    raise NotImplementedError(
-        "Completen comparar_esquema antes de ejecutar el programa."
-    )
+    esquema_notebook = {
+        "country": pl.String,
+        "iso_alpha2": pl.String,
+        "iso_alpha3": pl.String,
+        "year": pl.Int64,
+        "period": pl.String,
+        "temperature_c": pl.Float64,
+        "parameter": pl.String,
+        "units": pl.String,
+        "source_file": pl.String,
+    }
+    diferencias = []
+    for columna, tipo in esquema_notebook.items():
+        if temperaturas.schema.get(columna) != tipo:
+            diferencias.append(temperaturas.schema.get(columna))
+    return diferencias
+    # raise NotImplementedError(
+    #     "Completen comparar_esquema antes de ejecutar el programa."
+    # )
 
 
 def validar_esquema(temperaturas: pl.DataFrame) -> None:
