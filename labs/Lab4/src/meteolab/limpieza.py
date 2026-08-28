@@ -9,16 +9,21 @@ from src.meteolab.constantes import Tabla
 
 def resumen_de_nulos(temperaturas: pl.DataFrame) -> pl.DataFrame:
     """Devuelve conteos y porcentajes de nulos por columna."""
-    raise NotImplementedError(
-        "Completen resumen_de_nulos antes de ejecutar el programa."
+    # tabla = temperaturas.filter()
+    return temperaturas.select(
+        pl.all().null_count(), pl.all().null_count() / pl.len() * 100
     )
+    # raise NotImplementedError(
+    #     "Completen resumen_de_nulos antes de ejecutar el programa."
+    # )
 
 
 def claves_repetidas(temperaturas: Tabla) -> Tabla:
     """Cuenta repeticiones de país, año y periodo."""
-    raise NotImplementedError(
-        "Completen claves_repetidas antes de ejecutar el programa."
-    )
+    return temperaturas.select(pl.all().value_counts())
+    # raise NotImplementedError(
+    #     "Completen claves_repetidas antes de ejecutar el programa."
+    # )
 
 
 def limpiar_temperaturas(temperaturas: Tabla) -> Tabla:
