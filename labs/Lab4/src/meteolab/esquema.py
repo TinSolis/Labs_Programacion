@@ -6,7 +6,7 @@ import pandera.polars as pa
 import polars as pl
 from pandera import Check
 
-from src.meteolab.constantes import PERIODOS_VALIDOS
+from src.meteolab.constantes import ESQUEMA_CRU, PERIODOS_VALIDOS
 
 ESQUEMA_TEMPERATURAS = pa.DataFrameSchema(
     {
@@ -25,27 +25,42 @@ ESQUEMA_TEMPERATURAS = pa.DataFrameSchema(
 
 def comparar_esquema(temperaturas: pl.DataFrame) -> list[str]:
     """Devuelve diferencias entre el esquema real y el esperado."""
-    raise NotImplementedError(
-        "Completen comparar_esquema antes de ejecutar el programa."
-    )
+    diferencias: list[str] = []
+    esquema = temperaturas.schema
+
+    for columna, tipo in ESQUEMA_CRU.items():
+        if columna not in esquema:
+            diferencias.append(f"Falta la columna '{columna}'.")
+        elif esquema[columna] != tipo:
+            diferencias.append(
+                f"La columna '{columna}' tiene tipo {esquema[columna]}, "
+                f"se esperaba {tipo}."
+            )
+
+    for columna in esquema:
+        if columna not in ESQUEMA_CRU:
+            diferencias.append(f"Sobra la columna '{columna}'.")
+
+    return diferencias
 
 
 def validar_esquema(temperaturas: pl.DataFrame) -> None:
     """Comprueba los nombres y tipos de las columnas."""
-    raise NotImplementedError(
-        "Completen validar_esquema antes de ejecutar el programa."
-    )
+    diferencias = comparar_esquema(temperaturas)
+    if diferencias:
+        raise ValueError(diferencias[0])
 
 
 def validar_datos(temperaturas: pl.DataFrame) -> pl.DataFrame:
     """Valida tipos, periodos, unidades y valores faltantes."""
-    raise NotImplementedError(
-        "Completen validar_datos antes de ejecutar el programa."
-    )
+    validar_esquema(temperaturas)
+    return ESQUEMA_TEMPERATURAS.validate(temperaturas)
 
 
 def casos_que_fallan(temperaturas: pl.DataFrame) -> pl.DataFrame:
     """Devuelve los incumplimientos sin ocultar sus columnas."""
-    raise NotImplementedError(
-        "Completen casos_que_fallan antes de ejecutar el programa."
-    )
+    try:
+        ESQUEMA_TEMPERATURAS.validate(temperaturas, lazy=True)
+    except pa.errors.SchemaErrors as error:
+        return error.failure_cases
+    return pl.DataFrame()
