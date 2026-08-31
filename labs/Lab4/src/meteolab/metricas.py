@@ -49,6 +49,20 @@ def anomalias_mensuales(
     umbral: float = 2.0,
 ) -> pl.DataFrame | pl.LazyFrame:
     """Marca anomalías usando una ventana por país y mes."""
-    raise NotImplementedError(
-        "Completen anomalias_mensuales antes de ejecutar el programa."
+    return (
+        mensuales.with_columns(
+            pl.col("temperature_c")
+            .mean()
+            .over("iso_alpha3", "month")
+            .alias("temperature_mean_month"),
+        )
+        .with_columns(
+            (
+                (pl.col("temperature_c") - pl.col("temperature_mean_month"))
+                / pl.col("temperature_c").std().over("iso_alpha3", "month")
+            ).alias("standardized_anomaly"),
+        )
+        .with_columns(
+            (pl.col("standardized_anomaly").abs() > umbral).alias("is_anomaly"),
+        )
     )
