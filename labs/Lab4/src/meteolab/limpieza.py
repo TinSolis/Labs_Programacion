@@ -9,25 +9,50 @@ from src.meteolab.constantes import Tabla
 
 def resumen_de_nulos(temperaturas: pl.DataFrame) -> pl.DataFrame:
     """Devuelve conteos y porcentajes de nulos por columna."""
-    # tabla = temperaturas.filter()
-    return temperaturas.select(
-        pl.all().null_count(), pl.all().null_count() / pl.len() * 100
+
+    nulos_df = pl.DataFrame(
+        {
+            "columna": temperaturas.columns,
+            "nulos": [
+                temperaturas[c].null_count() for c in temperaturas.columns
+            ],
+            "porcentaje": [
+                temperaturas[c].null_count() / temperaturas.height * 100
+                for c in temperaturas.columns
+            ],
+        }
     )
-    # raise NotImplementedError(
-    #     "Completen resumen_de_nulos antes de ejecutar el programa."
-    # )
+    return nulos_df
 
 
 def claves_repetidas(temperaturas: Tabla) -> Tabla:
     """Cuenta repeticiones de país, año y periodo."""
-    return temperaturas.select(pl.all().value_counts())
-    # raise NotImplementedError(
-    #     "Completen claves_repetidas antes de ejecutar el programa."
-    # )
+    conteo_df = (
+        temperaturas.group_by(["country", "year", "period"])
+        .len()
+        .filter(pl.col("len") > 1)
+    )
+    return conteo_df
 
 
 def limpiar_temperaturas(temperaturas: Tabla) -> Tabla:
     """Conserva el contrato de periodos y los nulos válidos."""
-    raise NotImplementedError(
-        "Completen limpiar_temperaturas antes de ejecutar el programa."
+    mensuales = (
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
     )
+    limpio_df = temperaturas.filter(
+        pl.col("period").is_in(mensuales)
+        & pl.col("temperature_c").is_not_null()
+    )
+    return limpio_df
