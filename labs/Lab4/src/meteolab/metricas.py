@@ -40,9 +40,13 @@ def resumen_anual_desde_mensuales(
     """Calcula medias anuales usando únicamente filas mensuales."""
 
     mensuales = _filtrar_paises(mensuales, paises)
-    return mensuales.group_by("iso_alpha3", "country", "year").agg(
-        pl.len().alias("meses_disponibles"),
-        pl.col("temperature_c").mean().alias("temperature_mean"),
+    return (
+        mensuales.group_by("iso_alpha3", "country", "year")
+        .agg(
+            pl.len().alias("meses_disponibles"),
+            pl.col("temperature_c").mean().alias("temperature_mean"),
+        )
+        .sort("iso_alpha3", "year")
     )
 
 
