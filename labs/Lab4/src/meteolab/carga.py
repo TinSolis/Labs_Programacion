@@ -1,0 +1,24 @@
+"""Funciones de lectura del CSV que deben completar ustedes."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import polars as pl
+
+from src.meteolab.constantes import RUTA_CSV, ruta_existente
+
+SCHEMA = {
+    "year": pl.Int64,
+    "temperature_c": pl.Float64,
+}
+
+
+def leer_temperaturas(ruta: Path = RUTA_CSV) -> pl.DataFrame:
+    """Lee el CSV CRU con sus tipos y valores faltantes."""
+    return pl.read_csv(ruta_existente(ruta), schema_overrides=SCHEMA)
+
+
+def escanear_temperaturas(ruta: Path = RUTA_CSV) -> pl.LazyFrame:
+    """Construye una consulta lazy sobre el CSV."""
+    return pl.scan_csv(ruta_existente(ruta), schema_overrides=SCHEMA)
