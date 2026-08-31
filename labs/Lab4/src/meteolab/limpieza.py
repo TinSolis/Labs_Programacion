@@ -4,55 +4,38 @@ from __future__ import annotations
 
 import polars as pl
 
-from src.meteolab.constantes import Tabla
+from src.meteolab.constantes import PERIODOS_MENSUALES, Tabla
+
+CLAVES = ["iso_alpha3", "year", "period"]
 
 
 def resumen_de_nulos(temperaturas: pl.DataFrame) -> pl.DataFrame:
     """Devuelve conteos y porcentajes de nulos por columna."""
 
-    nulos_df = pl.DataFrame(
+    total = temperaturas.height
+    return pl.DataFrame(
         {
             "columna": temperaturas.columns,
             "nulos": [
-                temperaturas[c].null_count() for c in temperaturas.columns
+                temperaturas[col].null_count() for col in temperaturas.columns
             ],
             "porcentaje": [
-                temperaturas[c].null_count() / temperaturas.height * 100
-                for c in temperaturas.columns
+                temperaturas[col].null_count() / total
+                for col in temperaturas.columns
             ],
         }
     )
-    return nulos_df
 
 
 def claves_repetidas(temperaturas: Tabla) -> Tabla:
     """Cuenta repeticiones de país, año y periodo."""
-    conteo_df = (
-        temperaturas.group_by(["country", "year", "period"])
-        .len()
-        .filter(pl.col("len") > 1)
-    )
-    return conteo_df
+
+    return temperaturas.group_by(CLAVES).len().filter(pl.col("len") > 1)
 
 
 def limpiar_temperaturas(temperaturas: Tabla) -> Tabla:
     """Conserva el contrato de periodos y los nulos válidos."""
-    mensuales = (
-        "JAN",
-        "FEB",
-        "MAR",
-        "APR",
-        "MAY",
-        "JUN",
-        "JUL",
-        "AUG",
-        "SEP",
-        "OCT",
-        "NOV",
-        "DEC",
-    )
-    limpio_df = temperaturas.filter(
-        pl.col("period").is_in(mensuales)
+    return temperaturas.filter(
+        pl.col("period").is_in(PERIODOS_MENSUALES)
         & pl.col("temperature_c").is_not_null()
     )
-    return limpio_df
