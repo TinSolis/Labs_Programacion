@@ -217,3 +217,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+labs/Lab4/data/cru_country_tmp_tidy.csv
