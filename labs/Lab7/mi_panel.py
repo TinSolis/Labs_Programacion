@@ -44,10 +44,10 @@ def cargar_datos() -> pl.DataFrame:
 
 df = cargar_datos()
 
-raise NotImplementedError(
-    "Completen las cuatro secciones de este archivo y borren esta línea "
-    "antes de ejecutar el programa."
-)
+# raise NotImplementedError(
+#     "Completen las cuatro secciones de este archivo y borren esta línea "
+#     "antes de ejecutar el programa."
+# )
 
 # --- 1) La tabla interactiva -----------------------------------------------
 #
@@ -68,6 +68,73 @@ raise NotImplementedError(
 #   https://docs.streamlit.io/develop/api-reference/widgets/st.slider
 
 # Su código aquí
+species_box = st.selectbox("Especie", options=df["species"].unique().to_list())
+body_mass_g_slider = st.slider(
+    label="Masa corporal (g)",
+    min_value=df["body_mass_g"].min(),
+    max_value=df["body_mass_g"].max(),
+    value=(df["body_mass_g"].min(), df["body_mass_g"].max()),
+)
+columns_config = {
+    "species": st.column_config.TextColumn(
+        "Especie",
+        help="Especies de los pingüinos registrados",
+        max_chars=100,
+        width="medium",
+    ),
+    "island": st.column_config.TextColumn(
+        "Isla",
+        help="Isla de origen de los pingüinos registrados",
+        max_chars=100,
+        width="medium",
+    ),
+    "culmen_length_mm": st.column_config.NumberColumn(
+        "Largo de pico",
+        help="Largo del pico de los pingüinos registrados en unidad de milímetros (mm)",
+        format="%.2f mm",
+        min_value=df["culmen_length_mm"].min(),
+        max_value=df["culmen_length_mm"].max(),
+    ),
+    "culmen_depth_mm": st.column_config.NumberColumn(
+        "Alto de pico",
+        help="Alto del pico de los pingüinos registrados en unidad de milímetros (mm)",
+        format="%.2f mm",
+        min_value=df["culmen_depth_mm"].min(),
+        max_value=df["culmen_depth_mm"].max(),
+    ),
+    "flipper_length_mm": st.column_config.NumberColumn(
+        "Largo de aleta",
+        help="Largo de la aleta de los pingüinos registrados en unidad de milímetros (mm)",
+        format="%.2f mm",
+        min_value=df["flipper_length_mm"].min(),
+        max_value=df["flipper_length_mm"].max(),
+    ),
+    "body_mass_g": st.column_config.NumberColumn(
+        "Masa corporal",
+        help="Masa corporal de los pingüinos registrados en unidad de gramos (g)",
+        format="%.2f g",
+        min_value=df["body_mass_g"].min(),
+        max_value=df["body_mass_g"].max(),
+    ),
+    "sex": st.column_config.TextColumn(
+        "Sexo",
+        help="Sexo de los pingüinos registrados",
+        max_chars=100,
+        width="medium",
+    ),
+}
+df_filtrado = df.filter(
+    (pl.col("species") == species_box)
+    & pl.col("body_mass_g").is_between(
+        body_mass_g_slider[0], body_mass_g_slider[1]
+    )
+)
+if df_filtrado.height > 0:
+    st.dataframe(df_filtrado, column_config=columns_config)
+else:
+    st.warning("No hay registros que cumplan con los filtros seleccionados.")
+
+# st.dataframe(df, config_column=columns_config)
 
 
 # --- 2) La calidad de los datos --------------------------------------------
