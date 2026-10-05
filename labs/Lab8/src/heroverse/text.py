@@ -14,9 +14,15 @@ def vectorizar_tfidf(
     una fila por texto. Las filas con tokens retenidos tienen norma 1;
     las que quedan sin tokens son vectores cero y conservan su posición.
     """
-    raise NotImplementedError(
-        "Completen vectorizar_tfidf antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen vectorizar_tfidf antes de ejecutar el programa."
+    # )
+    vectorizador = TfidfVectorizer(
+        stop_words="english", min_df=min_df, max_features=max_features
     )
+
+    tfidf = vectorizador.fit_transform(textos)
+    return vectorizador, tfidf
 
 
 def vectorizar_bolsa(
@@ -28,6 +34,12 @@ def vectorizar_bolsa(
     `min_df` y `max_features`. La matriz es dispersa, tiene una fila por texto
     y cada celda cuenta cuántas veces aparece la palabra en ese texto.
     """
-    raise NotImplementedError(
-        "Completen vectorizar_bolsa antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen vectorizar_bolsa antes de ejecutar el programa."
+    # )
+    contador_poderes = CountVectorizer(
+        stop_words="english", min_df=min_df, max_features=max_features
     )
+
+    bolsa = contador_poderes.fit_transform(textos)
+    return contador_poderes, bolsa
