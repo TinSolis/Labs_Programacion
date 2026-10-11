@@ -38,6 +38,31 @@ def extraer_embeddings(
     calcular gradientes. El resultado es un arreglo `(len(rutas),
     dimensión)`.
     """
-    raise NotImplementedError(
-        "Completen extraer_embeddings antes de ejecutar el programa."
-    )
+    # raise NotImplementedError(
+    #     "Completen extraer_embeddings antes de ejecutar el programa."
+    # )
+
+    if tamano_lote <= 0:
+        raise ValueError("tamano_lote debe ser mayor que cero")
+
+    embeddings_lotes = []
+
+    for inicio in range(0, len(rutas), tamano_lote):
+        rutas_lote = rutas[inicio : inicio + tamano_lote]
+
+        lote_imagenes = torch.stack(
+            [
+                transformacion(Image.open(ruta).convert("RGB"))
+                for ruta in rutas_lote
+            ]
+        )
+
+        with torch.no_grad():
+            embeddings = modelo(lote_imagenes)
+
+        embeddings_lotes.append(embeddings.cpu().numpy())
+
+    if not embeddings_lotes:
+        return np.empty((0, 0), dtype=np.float32)
+
+    return np.concatenate(embeddings_lotes, axis=0)
