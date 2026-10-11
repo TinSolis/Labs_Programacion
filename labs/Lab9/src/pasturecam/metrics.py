@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from src.pasturecam.contratos import PESOS_OBJETIVOS
+from src.pasturecam.contratos import AREA_CUADRANTE_M2, PESOS_OBJETIVOS
 
 
 def r2_log_ponderado(
@@ -32,6 +32,7 @@ def gramos_a_kg_ha(gramos: float) -> float:
     `gramos_a_kg_ha(1)` da aproximadamente 47,6: un gramo en el cuadrante
     equivale a esa cantidad de kilogramos repartidos en una hectárea.
     """
-    raise NotImplementedError(
-        "Completen gramos_a_kg_ha antes de ejecutar el programa."
-    )
+    # raise NotImplementedError(
+    #     "Completen gramos_a_kg_ha antes de ejecutar el programa."
+    # )
+    return gramos * 10_000 / AREA_CUADRANTE_M2 / 1_000
