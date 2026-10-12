@@ -1,0 +1,14 @@
+.DS_Store
+.venv/
+__pycache__/
+data/raw/mediciones.csv
+data/raw/imagenes/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+mlflow.db
+mlruns/
+data/processed/*
+!data/processed/.gitignore
+reports/figures/*
+!reports/figures/.gitignore
