@@ -16,9 +16,16 @@ def dividir_en_tiles(imagen: Image.Image, n: int) -> list[Image.Image]:
     para cubrir el resto que deja la división entera. Juntos, los tiles
     cubren exactamente el cuadrante original.
     """
-    raise NotImplementedError(
-        "Completen dividir_en_tiles antes de ejecutar el programa."
-    )
+    # raise NotImplementedError(
+    #     "Completen dividir_en_tiles antes de ejecutar el programa."
+    # )
+    ancho_tile = imagen.width // n
+    tiles = []
+    for i in range(n):
+        izquierda = i * ancho_tile
+        derecha = imagen.width if i == n - 1 else izquierda + ancho_tile
+        tiles.append(imagen.crop((izquierda, 0, derecha, imagen.height)))
+    return tiles
 
 
 def extraer_embeddings(

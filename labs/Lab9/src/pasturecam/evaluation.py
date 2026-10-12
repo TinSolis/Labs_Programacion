@@ -3,10 +3,11 @@
 from collections.abc import Callable
 
 import numpy as np
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.metrics import r2_score
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from src.pasturecam.contratos import ResultadoCV
 
@@ -19,8 +20,14 @@ def construir_pipeline(regresor: BaseEstimator) -> Pipeline:
     todas las componentes por igual: sin escalar, las de mayor escala
     quedarían menos penalizadas.
     """
-    raise NotImplementedError(
-        "Completen construir_pipeline antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen construir_pipeline antes de ejecutar el programa."
+    # )
+    return Pipeline(
+        [
+            ("escalador", StandardScaler()),
+            ("regresor", regresor),
+        ]
     )
 
 
@@ -43,6 +50,21 @@ def evaluar(
     validación. `metrica` recibe `(y_real, y_predicho)` del fold de
     validación; por omisión es el R² de `scikit-learn`.
     """
-    raise NotImplementedError(
-        "Completen evaluar antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen evaluar antes de ejecutar el programa."
+    # )
+    puntajes: list[float] = []
+    n_splits = cv.get_n_splits(X, y, grupos)
+
+    for indices_train, indices_val in cv.split(X, y, grupos):
+        modelo = clone(pipeline)
+        modelo.fit(X[indices_train], y[indices_train])
+        predicciones = modelo.predict(X[indices_val])
+        puntajes.append(metrica(y[indices_val], predicciones))
+
+    return ResultadoCV(
+        puntajes=puntajes,
+        promedio=float(np.mean(puntajes)),
+        desviacion=float(np.std(puntajes)),
+        descripcion_validacion=f"{cv.__class__.__name__}({n_splits})",
     )
