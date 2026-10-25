@@ -1,8 +1,10 @@
 """Limpieza y partición de las letras de MoodyLyrics4Q."""
 
+import re
 from collections.abc import Sequence
 
 import numpy as np
+from sklearn.model_selection import StratifiedGroupKFold
 
 
 def limpiar_letra(texto: str) -> str:
@@ -19,9 +21,17 @@ def limpiar_letra(texto: str) -> str:
     inicio ni al final, y aplicar la función dos veces da lo mismo que
     aplicarla una.
     """
-    raise NotImplementedError(
-        "Completen limpiar_letra antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen limpiar_letra antes de ejecutar el programa."
+    # )
+    texto = re.sub(
+        r"\[[^\]]*\]|\((?:Chorus|Verse|Bridge|Intro|Outro|Instrumental)\b[^)]*\)",
+        " ",
+        texto,
+        flags=re.IGNORECASE,
     )
+    texto = re.sub(r"\s+", " ", texto)
+    return texto.strip()
 
 
 def separar_test(
@@ -37,6 +47,14 @@ def separar_test(
     `StratifiedGroupKFold` con cinco particiones, `shuffle=True` y
     `random_state=0`, y el test es la primera de ellas.
     """
-    raise NotImplementedError(
-        "Completen separar_test antes de ejecutar el programa."
+    # raise NotImplementedError(
+    #     "Completen separar_test antes de ejecutar el programa."
+    # )
+    indices = np.arange(len(estados))
+    cv = StratifiedGroupKFold(
+        n_splits=5,
+        shuffle=True,
+        random_state=0,
     )
+    train_val, test = next(cv.split(indices, estados, groups=artistas))
+    return train_val, test
