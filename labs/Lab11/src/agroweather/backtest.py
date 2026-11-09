@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import lightgbm
 import numpy as np
@@ -52,9 +53,71 @@ def temporal_split(
     Rechaza largos distintos, ausencia de `hora` de tipo fecha, entradas
     vacías, horizonte menor que 1, cortes invertidos y particiones vacías.
     """
-    raise NotImplementedError(
-        "Completen temporal_split antes de ejecutar esta celda."
+    # raise NotImplementedError(
+    #     "Completen temporal_split antes de ejecutar esta celda."
+    # )
+    # 1. Convertir las fechas a datetime
+    inicio_validation = (
+        datetime.fromisoformat(inicio_validation)
+        if isinstance(inicio_validation, str)
+        else inicio_validation
     )
+
+    inicio_test = (
+        datetime.fromisoformat(inicio_test)
+        if isinstance(inicio_test, str)
+        else inicio_test
+    )
+
+    tz = X.schema["hora"].time_zone
+
+    if tz is not None:
+        zona = ZoneInfo(tz)
+
+        if inicio_validation.tzinfo is None:
+            inicio_validation = inicio_validation.replace(tzinfo=zona)
+        else:
+            inicio_validation = inicio_validation.astimezone(zona)
+
+        if inicio_test.tzinfo is None:
+            inicio_test = inicio_test.replace(tzinfo=zona)
+        else:
+            inicio_test = inicio_test.astimezone(zona)
+
+    if inicio_validation >= inicio_test:
+        raise ValueError(
+            "El inicio de validation no puede ser posterior al de test."
+        )
+
+    hora_target = X["hora"] + timedelta(hours=horizonte)
+
+    primer_origen_validation = inicio_validation - timedelta(hours=horizonte)
+    primer_origen_test = inicio_test - timedelta(hours=horizonte)
+
+    en_train = hora_target < primer_origen_validation
+
+    en_validation = (hora_target >= inicio_validation) & (
+        hora_target < primer_origen_test
+    )
+
+    en_test = hora_target >= inicio_test
+
+    partes = {}
+
+    for nombre, mascara in [
+        ("train", en_train),
+        ("validation", en_validation),
+        ("test", en_test),
+    ]:
+        X_parte = X.filter(mascara)
+        y_parte = y.filter(mascara)
+
+        if X_parte.is_empty():
+            raise ValueError(f"La partición {nombre} está vacía.")
+
+        partes[nombre] = (X_parte, y_parte)
+
+    return partes
 
 
 def rmse(y_real: pl.Series, y_pred: pl.Series) -> float:
@@ -150,9 +213,21 @@ def daily_persistence_forecast(
     notebook, esas filas se excluyen de todas ellas; las features con
     faltantes se conservan para LightGBM.
     """
-    raise NotImplementedError(
-        "Completen daily_persistence_forecast antes de ejecutar esta celda."
+    # raise NotImplementedError(
+    #     "Completen daily_persistence_forecast antes de ejecutar esta celda."
+    # )
+    if horizonte < 1 or horizonte > 24:
+        raise ValueError("El horizonte debe estar entre 1 y 24.")
+
+    horas_objetivo = X.select(
+        (
+            pl.col("hora") + timedelta(hours=horizonte) - timedelta(hours=24)
+        ).alias("hora")
     )
+    resultado = horas_objetivo.join(
+        temperaturas.select(["hora", "temp"]), on="hora", how="left"
+    )
+    return resultado["temp"].rename("pronostico")
 
 
 def climatology_forecast(
@@ -170,9 +245,39 @@ def climatology_forecast(
     no aparece en train, usa la media general de train. Devuelve una serie
     `pronostico` con una fila por cada fila de `X`.
     """
-    raise NotImplementedError(
-        "Completen climatology_forecast antes de ejecutar esta celda."
+    # raise NotImplementedError(
+    #     "Completen climatology_forecast antes de ejecutar esta celda."
+    # )
+    train = (
+        X_train.select(
+            (pl.col("hora") + timedelta(hours=horizonte)).alias("hora_target")
+        )
+        .with_columns(
+            pl.col("hora_target").dt.month().alias("mes"),
+            pl.col("hora_target").dt.hour().alias("hora_dia"),
+        )
+        .with_columns(y_train.alias("temp"))
     )
+
+    climatologia = train.group_by(["mes", "hora_dia"]).agg(
+        pl.col("temp").mean().alias("media")
+    )
+    media_general = y_train.mean()
+
+    objetivos = X.select(
+        (pl.col("hora") + timedelta(hours=horizonte)).alias("hora_target")
+    ).with_columns(
+        pl.col("hora_target").dt.month().alias("mes"),
+        pl.col("hora_target").dt.hour().alias("hora_dia"),
+    )
+
+    resultado = objetivos.join(
+        climatologia,
+        on=["mes", "hora_dia"],
+        how="left",
+    ).with_columns(pl.col("media").fill_null(media_general))
+
+    return resultado["media"].rename("pronostico")
 
 
 def make_expanding_folds(
