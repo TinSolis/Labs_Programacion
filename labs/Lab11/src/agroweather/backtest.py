@@ -460,13 +460,21 @@ def mejor_umbral(
     costo_por_alerta: float = 400_000.0,
     costo_helada: float = 20_000_000.0,
 ) -> tuple[float, float]:
-    """Busca el umbral de temperatura que minimiza el costo de la alerta.
+    real = np.asarray(real, dtype=bool)
+    pronostico = np.asarray(pronostico, dtype=float)
+    if real.shape != pronostico.shape:
+        raise ValueError("real y pronostico deben tener el mismo largo")
+    if real.size == 0:
+        raise ValueError("No hay noches para elegir el umbral")
 
-    Recorre los valores pronosticados y se queda con el primero que alcanza el
-    costo mínimo. Devuelve `(umbral, costo)`: se enciende la alerta cuando el
-    pronóstico es menor que el umbral. El umbral se elige en validation y se
-    aplica una sola vez en test.
-    """
-    raise NotImplementedError(
-        "Completen mejor_umbral antes de ejecutar esta celda."
-    )
+    mejor = None
+    for candidato in np.sort(np.unique(pronostico)):
+        costo = costo_alerta(
+            real,
+            pronostico < candidato,
+            costo_por_alerta=costo_por_alerta,
+            costo_helada=costo_helada,
+        )
+        if mejor is None or costo < mejor[1]:
+            mejor = (float(candidato), costo)
+    return mejor
