@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import lightgbm
 import numpy as np
 import polars as pl
+from sklearn.base import clone
 
 
 def make_model(**params) -> lightgbm.LGBMRegressor:
@@ -295,9 +296,39 @@ def make_expanding_folds(
     `indice` es la columna `hora` de `X`. Devuelve posiciones enteras de esa
     columna, no fechas: son las que usa `walk_forward` para seleccionar filas.
     """
-    raise NotImplementedError(
-        "Completen make_expanding_folds antes de ejecutar esta celda."
-    )
+    # raise NotImplementedError(
+    #     "Completen make_expanding_folds antes de ejecutar esta celda."
+    # )
+    tz = indice.dtype.time_zone
+
+    folds = []
+
+    for anio in anios:
+        inicio = datetime(anio, 1, 1)
+        if tz is not None:
+            inicio = inicio.replace(tzinfo=ZoneInfo(tz))
+
+        corte_train = inicio - timedelta(hours=purga_horas)
+
+        mascara_train = indice < corte_train
+
+        mascara_validation = (indice >= inicio) & (
+            indice < inicio.replace(year=anio + 1)
+        )
+
+        indices_train = np.flatnonzero(mascara_train.to_numpy())
+
+        indices_validation = np.flatnonzero(mascara_validation.to_numpy())
+
+        if len(indices_train) == 0:
+            raise ValueError(f"Train vacío para el año {anio}.")
+
+        if len(indices_validation) == 0:
+            raise ValueError(f"Validation vacío para el año {anio}.")
+
+        folds.append((indices_train, indices_validation))
+
+    return folds
 
 
 def walk_forward(
@@ -314,9 +345,72 @@ def walk_forward(
     Devuelve una tabla con las columnas `hora` (el origen), `fold`, `real` y
     `pronostico`.
     """
-    raise NotImplementedError(
-        "Completen walk_forward antes de ejecutar esta celda."
-    )
+    # raise NotImplementedError(
+    #     "Completen walk_forward antes de ejecutar esta celda."
+    # )
+    if X.height != len(y):
+        raise ValueError("X e y deben tener el mismo número de filas.")
+
+    if "hora" not in X.columns:
+        raise ValueError("X debe contener la columna 'hora'.")
+
+    if not folds:
+        raise ValueError("Debe proporcionarse al menos un fold.")
+
+    resultados = []
+    for numero_fold, (indices_train, indices_validation) in enumerate(
+        folds, start=1
+    ):
+        indices_train = np.asarray(indices_train)
+        indices_validation = np.asarray(indices_validation)
+
+        if (
+            indices_train.ndim != 1
+            or indices_validation.ndim != 1
+            or not np.issubdtype(indices_train.dtype, np.integer)
+            or not np.issubdtype(indices_validation.dtype, np.integer)
+        ):
+            raise ValueError(
+                "Los índices deben ser arrays enteros unidimensionales."
+            )
+
+        if len(indices_train) == 0 or len(indices_validation) == 0:
+            raise ValueError("Train y validation no pueden estar vacíos.")
+
+        if (
+            np.any(indices_train < 0)
+            or np.any(indices_train >= X.height)
+            or np.any(indices_validation < 0)
+            or np.any(indices_validation >= X.height)
+        ):
+            raise ValueError("Los índices están fuera de rango.")
+
+        if np.intersect1d(indices_train, indices_validation).size > 0:
+            raise ValueError("Train no puede incluir validation.")
+        X_train = X[indices_train]
+        X_validation = X[indices_validation]
+
+        y_train = y[indices_train]
+        y_validation = y[indices_validation]
+
+        X_train_modelo = X_train.drop("hora")
+        X_validation_modelo = X_validation.drop("hora")
+
+        modelo_fold = clone(modelo)
+        modelo_fold.fit(X_train_modelo, y_train)
+        pronosticos = modelo_fold.predict(X_validation_modelo)
+        resultado_fold = pl.DataFrame(
+            {
+                "hora": X_validation["hora"],
+                "fold": [numero_fold] * X_validation.height,
+                "real": y_validation,
+                "pronostico": pronosticos,
+            }
+        )
+
+        resultados.append(resultado_fold)
+
+    return pl.concat(resultados)
 
 
 def recall_evento(real: pl.Series, alerta: pl.Series) -> float:
