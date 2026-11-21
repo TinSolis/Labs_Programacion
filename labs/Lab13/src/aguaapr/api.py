@@ -1,8 +1,12 @@
 """Rutas de inferencia: información del modelo, vida y predicción."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from src.aguaapr.contracts import Servicios
+from src.aguaapr.artifacts import a_tabla, predecir
+from src.aguaapr.constants import OPCIONALES, RANGOS
+from src.aguaapr.contracts import RespuestaPrediccion, Servicios
+from src.aguaapr.deps import crear_dependencia_clave
+from src.aguaapr.validation import MedicionAgua
 
 
 def crear_router_inferencia(servicios: Servicios) -> APIRouter:
@@ -17,6 +21,39 @@ def crear_router_inferencia(servicios: Servicios) -> APIRouter:
       `RespuestaPrediccion` con la predicción y su probabilidad. Exige la
       clave de API con `crear_dependencia_clave`.
     """
-    raise NotImplementedError(
-        "Completen crear_router_inferencia antes de ejecutar el programa."
+    router = APIRouter()
+
+    @router.get("/")
+    def informacion() -> dict:
+        return {
+            "metricas_validacion": servicios.metadata["metricas_validacion"],
+            "entrada": {
+                columna: {
+                    "minimo": minimo,
+                    "maximo": maximo,
+                    "opcional": columna in OPCIONALES,
+                }
+                for columna, (minimo, maximo) in RANGOS.items()
+            },
+            "salida": {
+                "prediccion": "1 si el agua es potable, 0 si no es potable",
+                "probabilidad": "probabilidad de que el agua sea potable",
+            },
+        }
+
+    @router.get("/health")
+    def vida() -> dict:
+        return {"estado": "ok"}
+
+    @router.post(
+        "/predict",
+        dependencies=[Depends(crear_dependencia_clave(servicios))],
     )
+    def predict(medicion: MedicionAgua) -> RespuestaPrediccion:
+        clases, probabilidades = predecir(servicios.modelo, a_tabla([medicion]))
+        return RespuestaPrediccion(
+            prediccion=int(clases[0]),
+            probabilidad=round(float(probabilidades[0]), 4),
+        )
+
+    return router
