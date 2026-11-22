@@ -11,6 +11,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --only-group servicio --no-install-project
 
 COPY src ./src
+COPY models ./models
 
 RUN useradd --system --create-home aguaapr
 USER aguaapr
