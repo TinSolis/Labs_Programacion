@@ -1,8 +1,11 @@
 """Rutas de inferencia: información del modelo, vida y predicción."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from src.aguaapr.contracts import Servicios
+from src.aguaapr.artifacts import a_tabla, predecir
+from src.aguaapr.contracts import RespuestaPrediccion, Servicios
+from src.aguaapr.deps import crear_dependencia_clave
+from src.aguaapr.validation import MedicionAgua
 
 
 def crear_router_inferencia(servicios: Servicios) -> APIRouter:
@@ -17,6 +20,43 @@ def crear_router_inferencia(servicios: Servicios) -> APIRouter:
       `RespuestaPrediccion` con la predicción y su probabilidad. Exige la
       clave de API con `crear_dependencia_clave`.
     """
-    raise NotImplementedError(
-        "Completen crear_router_inferencia antes de ejecutar el programa."
-    )
+    router = APIRouter()
+
+    @router.get("/")
+    def describir_modelo():
+        return {
+            "metricas_validacion": servicios.metadata["metricas_validacion"],
+            "entrada": {
+                "ph": [0, 14],
+                "Hardness": [0, 500],
+                "Solids": [0, 100000],
+                "Chloramines": [0, 15],
+                "Sulfate": [0, 600],
+                "Conductivity": [0, 1000],
+                "Organic_carbon": [0, 50],
+                "Trihalomethanes": [0, 200],
+                "Turbidity": [0, 10],
+            },
+            "salida": {"prediccion": "0 = no potable, 1 = potable"},
+        }
+
+    # GET /health
+    @router.get("/health")
+    def health():
+        return {"estado": "ok"}
+
+    # POST /predict
+    @router.post("/predict")
+    def predict(
+        medicion: MedicionAgua,
+        _: None = Depends(crear_dependencia_clave(servicios)),
+    ):
+        tabla = a_tabla([medicion])
+        clases, probabilidades = predecir(servicios.modelo, tabla)
+
+        return RespuestaPrediccion(
+            prediccion=int(clases[0]),
+            probabilidad=round(float(probabilidades[0]), 4),
+        )
+
+    return router
