@@ -3,7 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,20 +23,17 @@ class Settings(BaseSettings):
     | `APR_LOG_LEVEL` | `log_level` | `INFO` |
     """
 
-    # Su código aquí: declaren `model_config` y los cuatro campos de la tabla.
-    api_key: SecretStr = Field(...)
-    grupo: str = Field(...)
-    model_dir: Path = Field(default=Path("models"))
-    log_level: str = Field(default="INFO")
-
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
         env_prefix="APR_",
+        env_file=".env",
         env_ignore_empty=True,
         extra="ignore",
     )
+
+    api_key: SecretStr
+    grupo: str
+    model_dir: Path = Path("models")
+    log_level: str = "INFO"
 
 
 @lru_cache

@@ -13,7 +13,9 @@ def verificar_api_key(recibida: str | None, esperada: str) -> None:
     carácter difieren las claves, para que una medición de tiempos no las
     delate.
     """
-    if (recibida is None) or (not secrets.compare_digest(recibida, esperada)):
+    if recibida is None or not secrets.compare_digest(
+        recibida.encode(), esperada.encode()
+    ):
         raise HTTPException(
-            status_code=401, detail="No se coinciden las claves."
+            status_code=401, detail="Clave de API ausente o inválida."
         )

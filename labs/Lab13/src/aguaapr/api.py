@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends
 
 from src.aguaapr.artifacts import a_tabla, predecir
+from src.aguaapr.constants import OPCIONALES, RANGOS
 from src.aguaapr.contracts import RespuestaPrediccion, Servicios
 from src.aguaapr.deps import crear_dependencia_clave
 from src.aguaapr.validation import MedicionAgua
@@ -23,37 +24,33 @@ def crear_router_inferencia(servicios: Servicios) -> APIRouter:
     router = APIRouter()
 
     @router.get("/")
-    def describir_modelo():
+    def informacion() -> dict:
         return {
             "metricas_validacion": servicios.metadata["metricas_validacion"],
             "entrada": {
-                "ph": [0, 14],
-                "Hardness": [0, 500],
-                "Solids": [0, 100000],
-                "Chloramines": [0, 15],
-                "Sulfate": [0, 600],
-                "Conductivity": [0, 1000],
-                "Organic_carbon": [0, 50],
-                "Trihalomethanes": [0, 200],
-                "Turbidity": [0, 10],
+                columna: {
+                    "minimo": minimo,
+                    "maximo": maximo,
+                    "opcional": columna in OPCIONALES,
+                }
+                for columna, (minimo, maximo) in RANGOS.items()
             },
-            "salida": {"prediccion": "0 = no potable, 1 = potable"},
+            "salida": {
+                "prediccion": "1 si el agua es potable, 0 si no es potable",
+                "probabilidad": "probabilidad de que el agua sea potable",
+            },
         }
 
-    # GET /health
     @router.get("/health")
-    def health():
+    def vida() -> dict:
         return {"estado": "ok"}
 
-    # POST /predict
-    @router.post("/predict")
-    def predict(
-        medicion: MedicionAgua,
-        _: None = Depends(crear_dependencia_clave(servicios)),
-    ):
-        tabla = a_tabla([medicion])
-        clases, probabilidades = predecir(servicios.modelo, tabla)
-
+    @router.post(
+        "/predict",
+        dependencies=[Depends(crear_dependencia_clave(servicios))],
+    )
+    def predict(medicion: MedicionAgua) -> RespuestaPrediccion:
+        clases, probabilidades = predecir(servicios.modelo, a_tabla([medicion]))
         return RespuestaPrediccion(
             prediccion=int(clases[0]),
             probabilidad=round(float(probabilidades[0]), 4),
